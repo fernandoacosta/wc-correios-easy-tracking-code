@@ -2,8 +2,8 @@
 Contributors: Amgnando
 Donate link: http://fernandoacosta.net
 Tags: woocommerce, correios, woocommerce correios
-Requires at least: 4.1
-Tested up to: 5.2.5
+Requires at least: 5.0
+Tested up to: 5.5.1
 
 Adicione código de rastreio dos Correios sem precisar abrir o pedido no WooCommerce.
 
