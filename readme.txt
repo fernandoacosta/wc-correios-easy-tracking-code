@@ -32,6 +32,9 @@ Na tela de pedidos, nas ações, clique no cliente feliz e insira o código de r
 
 == Changelog ==
 
+= 1.3.0 =
+* Melhorias gerais e atualização de compatibilidade
+
 = 1.2.1 =
 * Prevenir erro ao executar ações em massa
 
