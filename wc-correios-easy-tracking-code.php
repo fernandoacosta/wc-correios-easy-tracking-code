@@ -6,10 +6,10 @@
  * Author: Fernando Acosta
  * Author URI: http://fernandoacosta.net
  * Version: 1.2.1
- * Requires at least: 4.2
- * Tested up to: 5.2.5
- * WC requires at least: 3.2.0
- * WC tested up to:      3.7.0
+ * Requires at least: 5.0
+ * Tested up to: 5.5.1
+ * WC requires at least: 3.5.0
+ * WC tested up to:      4.6.1
  * License: GPL2
 */
 /*
