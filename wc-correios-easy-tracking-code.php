@@ -5,7 +5,7 @@
  * Plugin URI: http://fernandoacosta.net
  * Author: Fernando Acosta
  * Author URI: http://fernandoacosta.net
- * Version: 1.2.1
+ * Version: 1.3.0
  * Requires at least: 5.0
  * Tested up to: 5.5.1
  * WC requires at least: 3.5.0
@@ -106,24 +106,29 @@ class WC_Correios_Tracking_Code_Column {
   }
 
   public function wc_add_correios_tracking() {
-
-    $order_id = $_POST['order_id'];
-    $tracking_code = $_POST['tracking'];
-
-    if ( wc_correios_update_tracking_code( $order_id, $tracking_code ) ) {
-      wp_send_json_success();
-    } else {
-
+    if ( ! function_exists( 'wc_correios_update_tracking_code' ) ) {
       $return = array(
-        'message' => 'error',
+        'message' => __( 'Plugin WooCommerce Correios não está ativo', 'wc-correios-easy-tracking-code' ),
       );
 
       wp_send_json_error( $return );
     }
 
-    die();
+
+    $order_id = esc_attr( $_POST['order_id'] );
+    $tracking_code = esc_attr( $_POST['tracking'] );
+
+    if ( wc_correios_update_tracking_code( $order_id, $tracking_code ) ) {
+      wp_send_json_success();
+    }
+
+    $return = array(
+      'message' => 'error',
+    );
+
+    wp_send_json_error( $return );
 
   }
-
 }
+
 add_action( 'plugins_loaded', array( 'WC_Correios_Tracking_Code_Column', 'get_instance' ) );
