@@ -14,7 +14,7 @@ jQuery( document ).ready( function( $ ) {
 
   $( '.wc-correios-tracking-field' ).on( 'keypress', function( event ) {
 
-    var order_id = $( this ).data( 'order-id' );
+    var order_id = $( this ).data( 'order-id' ),
         field    = $( this );
 
     if( 13 == event.which ) { //enter
@@ -22,12 +22,13 @@ jQuery( document ).ready( function( $ ) {
 
       $.ajax({
         type:     'POST',
-        url:      woocommerce_admin_meta_boxes.ajax_url,
+        url:      wcCorreiosEasyTracking.ajax_url,
         cache:    false,
         data:     {
           action:       'wc_add_correios_tracking',
           tracking:     $( this ).val(),
           order_id:     order_id,
+          security:     wcCorreiosEasyTracking.nonce,
         },
 
         beforeSend: function () {

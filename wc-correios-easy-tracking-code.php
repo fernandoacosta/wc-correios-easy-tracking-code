@@ -44,8 +44,8 @@ class WC_Correios_Tracking_Code_Column {
     add_action( 'woocommerce_admin_order_actions_end', array( $this, 'wc_correios_shipping_tracking_field' ), 10, 1 );
     add_action( 'admin_enqueue_scripts', array( $this, 'add_scripts' ) );
 
+    // Só quem está logado: a permissão é conferida no handler.
     add_action( 'wp_ajax_wc_add_correios_tracking', array( $this, 'wc_add_correios_tracking' ) );
-    add_action( 'wp_ajax_nopriv_wc_add_correios_tracking', array( $this, 'wc_add_correios_tracking' ) );
   }
 
   /**
@@ -81,7 +81,15 @@ class WC_Correios_Tracking_Code_Column {
 
   public function add_scripts() {
     wp_enqueue_style( 'wc-correios-easy-tracking-code-css', plugins_url( '/', $this->get_main_file() ) . '/assets/wc-correios-easy-tracking-code.css', array(), 1.2 );
-    wp_enqueue_script( 'wc-correios-easy-tracking-code-js', plugins_url( '/', $this->get_main_file() ) . '/assets/wc-correios-easy-tracking-code.js', array(), 1.2, true );
+    wp_enqueue_script( 'wc-correios-easy-tracking-code-js', plugins_url( '/', $this->get_main_file() ) . '/assets/wc-correios-easy-tracking-code.js', array( 'jquery' ), 1.2, true );
+    wp_localize_script(
+      'wc-correios-easy-tracking-code-js',
+      'wcCorreiosEasyTracking',
+      array(
+        'ajax_url' => admin_url( 'admin-ajax.php' ),
+        'nonce'    => wp_create_nonce( 'wc_add_correios_tracking' ),
+      )
+    );
   }
 
   public function wc_correios_shipping_tracking( $actions, $the_order ) {
@@ -102,32 +110,40 @@ class WC_Correios_Tracking_Code_Column {
     $tracking_code = $the_order->get_meta( '_correios_tracking_code' );
     $tracking_code = is_array( $tracking_code ) ? array_shift( $tracking_code ) : $tracking_code;
 
-    echo '<input type="text" class="no-link wc-correios-tracking-field" data-order-id="' . $the_order->get_id() . '" placeholder="Rastreio" value="' . $tracking_code .'" />';
+    echo '<input type="text" class="no-link wc-correios-tracking-field" data-order-id="' . absint( $the_order->get_id() ) . '" placeholder="Rastreio" value="' . esc_attr( (string) $tracking_code ) . '" />';
   }
 
   public function wc_add_correios_tracking() {
+    check_ajax_referer( 'wc_add_correios_tracking', 'security' );
+
+    if ( ! current_user_can( 'edit_shop_orders' ) ) {
+      wp_send_json_error( array( 'message' => __( 'Você não tem permissão para editar pedidos.', 'wc-correios-easy-tracking-code' ) ), 403 );
+    }
+
     if ( ! function_exists( 'wc_correios_update_tracking_code' ) ) {
-      $return = array(
-        'message' => __( 'Plugin WooCommerce Correios não está ativo', 'wc-correios-easy-tracking-code' ),
-      );
-
-      wp_send_json_error( $return );
+      wp_send_json_error( array( 'message' => __( 'Plugin WooCommerce Correios não está ativo', 'wc-correios-easy-tracking-code' ) ) );
     }
 
+    $order_id = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
+    $order    = $order_id ? wc_get_order( $order_id ) : false;
 
-    $order_id = esc_attr( $_POST['order_id'] );
-    $tracking_code = esc_attr( $_POST['tracking'] );
-
-    if ( wc_correios_update_tracking_code( $order_id, $tracking_code ) ) {
-      wp_send_json_success();
+    if ( ! $order || 'shop_order' !== $order->get_type() ) {
+      wp_send_json_error( array( 'message' => __( 'Pedido não encontrado.', 'wc-correios-easy-tracking-code' ) ), 404 );
     }
 
-    $return = array(
-      'message' => 'error',
-    );
+    // Código dos Correios: letras e números, sem espaços, em maiúsculas. Vazio não apaga os códigos do pedido.
+    $tracking_code = isset( $_POST['tracking'] ) ? strtoupper( preg_replace( '/\s+/', '', sanitize_text_field( wp_unslash( $_POST['tracking'] ) ) ) ) : '';
 
-    wp_send_json_error( $return );
+    if ( '' === $tracking_code ) {
+      wp_send_json_error( array( 'message' => __( 'Digite o código de rastreio.', 'wc-correios-easy-tracking-code' ) ), 400 );
+    }
 
+    if ( wc_correios_update_tracking_code( $order, $tracking_code ) ) {
+      $codes = array_values( array_filter( explode( ',', (string) wc_get_order( $order_id )->get_meta( '_correios_tracking_code' ) ) ) );
+      wp_send_json_success( array( 'codes' => $codes ) );
+    }
+
+    wp_send_json_error( array( 'message' => __( 'Não foi possível salvar o código.', 'wc-correios-easy-tracking-code' ) ) );
   }
 }
 
