@@ -103,13 +103,39 @@ $check( 'pedido inexistente: 404 sem fatal', 404 === $r['status'] && false === (
 $r = $call( array( 'action' => 'wc_add_correios_tracking', 'order_id' => $id, 'tracking' => '   ', 'security' => $nonce ) );
 $check( 'código vazio é recusado e não apaga', false === ( $r['json']['success'] ?? null ) && 'XX123456789BR' === $codes( $id ) );
 
-// 7. Saída escapada no campo da lista.
+// 7. Mesmo código de novo: recusado. Segundo código: soma.
+$r = $call( array( 'action' => 'wc_add_correios_tracking', 'order_id' => $id, 'tracking' => 'XX123456789BR', 'security' => $nonce ) );
+$check( 'código repetido é recusado', false === ( $r['json']['success'] ?? null ) && 'XX123456789BR' === $codes( $id ) );
+$r = $call( array( 'action' => 'wc_add_correios_tracking', 'order_id' => $id, 'tracking' => 'YY987654321BR', 'security' => $nonce ) );
+$check( 'segundo código soma', array( 'XX123456789BR', 'YY987654321BR' ) === ( $r['json']['data']['codes'] ?? null ) );
+$check( 'resposta traz o HTML da lista', false !== strpos( (string) ( $r['json']['data']['html'] ?? '' ), 'data-code="YY987654321BR"' ) );
+
+// 8. Tirar um código.
+$r = $call( array( 'action' => 'wc_add_correios_tracking', 'order_id' => $id, 'tracking' => 'XX123456789BR', 'remove' => '1', 'security' => $nonce ) );
+$check( 'tirar um código deixa o outro', array( 'YY987654321BR' ) === ( $r['json']['data']['codes'] ?? null ) && 'YY987654321BR' === $codes( $id ) );
+$r = $call( array( 'action' => 'wc_add_correios_tracking', 'order_id' => $id, 'tracking' => 'ZZ000', 'remove' => '1', 'security' => $nonce ) );
+$check( 'tirar código que não está no pedido: recusado', false === ( $r['json']['success'] ?? null ) );
+
+// 9. Coluna "Rastreio" nas duas listas, para quem edita pedidos.
+$plugin = WC_Correios_Tracking_Code_Column::get_instance();
+$cols   = $plugin->add_column( array( 'cb' => '', 'order_number' => 'Pedido', 'order_status' => 'Status', 'order_total' => 'Total' ) );
+$check( 'coluna depois do status', array( 'cb', 'order_number', 'order_status', 'wc_correios_tracking', 'order_total' ) === array_keys( $cols ) );
+$check( 'coluna nas listas com e sem HPOS', false !== has_filter( 'manage_woocommerce_page_wc-orders_columns', array( $plugin, 'add_column' ) ) && false !== has_filter( 'manage_edit-shop_order_columns', array( $plugin, 'add_column' ) ) );
+wp_set_current_user( $customer );
+$check( 'cliente não vê a coluna', ! isset( $plugin->add_column( array( 'order_status' => 'Status' ) )['wc_correios_tracking'] ) );
+wp_set_current_user( $manager );
+
+// 10. Saída escapada na célula.
 $order = wc_get_order( $id );
 $order->update_meta_data( '_correios_tracking_code', '" autofocus onfocus="alert(1)' );
 $order->save();
 ob_start();
-do_action( 'woocommerce_admin_order_actions_end', wc_get_order( $id ) );
+do_action( 'manage_woocommerce_page_wc-orders_custom_column', 'wc_correios_tracking', wc_get_order( $id ) );
 $html = (string) ob_get_clean();
+$check( 'célula renderizada (HPOS)', false !== strpos( $html, 'class="wcet no-link" data-order-id="' . $id . '"' ) );
+ob_start();
+do_action( 'manage_shop_order_posts_custom_column', 'wc_correios_tracking', $id );
+$check( 'célula renderizada (lista sem HPOS)', false !== strpos( (string) ob_get_clean(), 'data-order-id="' . $id . '"' ) );
 $check( 'saída do código escapada (sem atributo injetado)', false === strpos( $html, '" autofocus' ) && false !== strpos( $html, '&quot; autofocus' ) );
 
 // Limpeza.

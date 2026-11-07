@@ -1,40 +1,135 @@
-.order_actions .wc-correios-tracking {
-  display: block;
-  text-indent: -9999px;
-  position: relative;
-  padding: 0!important;
-  height: 2em!important;
-  width: 2em;
+/* Coluna "Rastreio" da lista de pedidos. */
+.wp-list-table .column-wc_correios_tracking {
+  width: 18em;
 }
 
-.widefat .column-wc_actions a.wc-correios-tracking::after {
-  font-family: Dashicons;
-  text-indent: 0;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  line-height: 1.85;
-  margin: 0;
-  text-align: center;
-  speak: none;
-  font-variant: normal;
-  text-transform: none;
-  -webkit-font-smoothing: antialiased;
-  top: 0;
-  font-weight: 400;
-  content: '\f328';
+.wcet__codes {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
 }
-.widefat .column-wc_actions .wc-correios-tracking-field {
-  margin-top: 5px;
-  border-width: 2px;
-  max-width: 100%;
+
+.wcet__codes:empty {
   display: none;
-  width: 100%;
 }
-.widefat .column-wc_actions .wc-correios-tracking-field.success-save {
-  border-color: green;
+
+.wcet__code {
+  display: inline-flex;
+  max-width: 100%;
+  word-break: break-all;
+  align-items: center;
+  gap: 2px;
+  margin: 0 6px 4px 0;
+  padding: 1px 2px 1px 8px;
+  border-radius: 3px;
+  background: #f0f0f1;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
 }
-.widefat .column-wc_actions .wc-correios-tracking-field.error-save {
-  border-color: red;
+
+.wcet__remove {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: #646970;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.wcet__remove:hover,
+.wcet__remove:focus-visible {
+  background: #dcdcde;
+  color: #b32d2e;
+}
+
+.wcet__add {
+  display: flex;
+  flex-wrap: wrap; /* coluna estreita (lista com muitas colunas): o botão vai para baixo do campo */
+  gap: 4px;
+}
+
+.wcet__input {
+  flex: 1 1 9em;
+  min-width: 0;
+  max-width: 100%;
+  font-family: Consolas, Monaco, monospace;
+  text-transform: uppercase;
+}
+
+.wcet__input::placeholder {
+  text-transform: none;
+}
+
+.wcet__save {
+  flex: 0 0 auto;
+}
+
+.wcet__status {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.wcet__status:empty {
+  display: none;
+}
+
+.wcet.is-saving .wcet__status {
+  color: #646970;
+}
+
+.wcet.is-saved .wcet__status {
+  color: #00a32a;
+}
+
+.wcet.is-error .wcet__status {
+  color: #d63638;
+}
+
+.wcet.is-error .wcet__input {
+  border-color: #d63638;
+}
+
+.wcet[aria-busy="true"] .wcet__save {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Celular: o WordPress esconde as colunas até tocar no pedido; o rastreio fica sempre à vista. */
+@media screen and (max-width: 782px) {
+  /* Mais específico que a regra do WordPress ((td|th).column-primary ~ td:not(.check-column)). */
+  .wp-list-table tr:not(.inline-edit-row):not(.no-items) td.column-primary ~ td.column-wc_correios_tracking:not(.check-column),
+  .wp-list-table tr:not(.inline-edit-row):not(.no-items) th.column-primary ~ td.column-wc_correios_tracking:not(.check-column) {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 8px;
+  }
+
+  /* O nome da coluna ("Rastreio") em cima, não por cima dos códigos. */
+  .wp-list-table tr:not(.inline-edit-row):not(.no-items) td.column-wc_correios_tracking:not(.column-primary)::before {
+    position: static;
+    display: block;
+    width: auto;
+    margin-bottom: 4px;
+  }
+
+  .wcet__input {
+    min-height: 40px;
+    font-size: 16px; /* sem zoom do iOS ao focar */
+  }
+
+  .wcet__save,
+  .wcet__remove {
+    min-height: 40px;
+  }
+
+  .wcet__remove {
+    width: 40px;
+    height: 40px;
+  }
 }
