@@ -5,11 +5,13 @@
  * Plugin URI: http://fernandoacosta.net
  * Author: Fernando Acosta
  * Author URI: http://fernandoacosta.net
- * Version: 1.3.0
- * Requires at least: 5.0
- * Tested up to: 5.5.1
- * WC requires at least: 3.5.0
- * WC tested up to:      4.6.1
+ * Version: 2.0.0
+ * Requires at least: 6.0
+ * Requires PHP: 7.4
+ * Requires Plugins: woocommerce, woocommerce-correios
+ * Tested up to: 7.1
+ * WC requires at least: 8.0.0
+ * WC tested up to:      11.2.2
  * License: GPL2
 */
 /*
@@ -25,6 +27,9 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
+defined( 'ABSPATH' ) || exit;
+
 /**
 * WC Correios Tracking Code Column
 */
@@ -79,7 +84,18 @@ class WC_Correios_Tracking_Code_Column {
     return plugin_dir_path( __FILE__ );
   }
 
-  public function add_scripts() {
+  /**
+   * CSS e JS só na lista de pedidos (com e sem HPOS).
+   *
+   * @param string $hook Tela.
+   */
+  public function add_scripts( $hook = '' ) {
+    $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+    if ( ! $screen || ! in_array( $screen->id, array( 'edit-shop_order', 'woocommerce_page_wc-orders' ), true ) ) {
+      return;
+    }
+
     wp_enqueue_style( 'wc-correios-easy-tracking-code-css', plugins_url( '/', $this->get_main_file() ) . '/assets/wc-correios-easy-tracking-code.css', array(), 1.2 );
     wp_enqueue_script( 'wc-correios-easy-tracking-code-js', plugins_url( '/', $this->get_main_file() ) . '/assets/wc-correios-easy-tracking-code.js', array( 'jquery' ), 1.2, true );
     wp_localize_script(
@@ -148,3 +164,11 @@ class WC_Correios_Tracking_Code_Column {
 }
 
 add_action( 'plugins_loaded', array( 'WC_Correios_Tracking_Code_Column', 'get_instance' ) );
+
+// Compatível com a tabela de pedidos do WooCommerce (HPOS) e com o carrinho e o checkout em blocos.
+add_action( 'before_woocommerce_init', function () {
+  if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
+  }
+} );
