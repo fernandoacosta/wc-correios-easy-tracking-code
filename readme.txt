@@ -33,7 +33,8 @@ Funciona na lista de pedidos com e sem HPOS (armazenamento de pedidos de alto de
 
 == Screenshots ==
 
-1. Como adicionar um código de rastreio
+1. Coluna "Rastreio" na lista de pedidos: códigos com link, campo para adicionar e × para tirar.
+2. No celular, a coluna aparece em cada pedido, sem precisar abrir.
 
 == Changelog ==
 

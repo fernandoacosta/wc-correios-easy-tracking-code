@@ -16,20 +16,26 @@
 .wcet__code {
   display: inline-flex;
   max-width: 100%;
-  word-break: break-all;
   align-items: center;
-  gap: 2px;
-  margin: 0 6px 4px 0;
-  padding: 1px 2px 1px 8px;
+  gap: 1px;
+  margin: 0 4px 4px 0;
+  padding: 1px 1px 1px 6px;
   border-radius: 3px;
   background: #f0f0f1;
   font-family: Consolas, Monaco, monospace;
   font-size: 12px;
 }
 
+.wcet__code a {
+  overflow: hidden;
+  white-space: nowrap; /* o código não quebra no meio; coluna muito estreita corta com reticências */
+  text-overflow: ellipsis;
+}
+
 .wcet__remove {
-  width: 22px;
-  height: 22px;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: 2px;
